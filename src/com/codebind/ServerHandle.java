@@ -1,6 +1,7 @@
 package com.codebind;
 
 import javax.swing.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,17 +41,9 @@ public class ServerHandle {
         }
     }
 
-    int getStatus(){
-        return status;
-    }
-
-    int getPing(){
-        return ping();
-    }
-
-
 
     Integer ping(){
+        System.out.println("Pinging IP: " + IPAddr);
         delay(2000);
         return 69;
     }
@@ -58,6 +51,9 @@ public class ServerHandle {
     Integer login(String user, String pass){
         this.user=user;
         this.pass=pass;
+        System.out.println("Logging in... IP: " + IPAddr +
+                "|user: "+this.user +
+                "|pass: "+this.pass);
         delay(2000);
         int isConnected = 1;
         if (isConnected == 1){
@@ -68,11 +64,20 @@ public class ServerHandle {
         }
         return isConnected;
     }
+    List<String> getServerTree(){
+        System.out.println("Getting server tree...");
+        delay(2000);
+        String[] r =  {"/lol/xD","/lol/xD2","/test.txt","test2.txt"};
+        List<String> list = Arrays.asList(r);
+        return (list);
+    }
 
-
-    List<Integer> uploadFile(FileNode file){
-
-        return new ArrayList<Integer>(Arrays.asList(0));
+    List<String> getRemoteVersions(String name){
+        System.out.println("getting backupped versions of: "+name);
+        delay(2000);
+        String[] r =  {"xd1","xd2"};
+        List<String> list = Arrays.asList(r);
+        return (list);
     }
 
     byte[] getRemoteFile(String name, int version){
@@ -80,7 +85,7 @@ public class ServerHandle {
         delay(2000);
         int success = 1;
         if (success == 1){
-            String a = "bepis";
+            String a = "FILE CONTENT LOL";
             return a.getBytes();
         }
         else
@@ -94,24 +99,11 @@ public class ServerHandle {
     }
 
     int backupThisFile(FileNode file){
+        File f = file.f;
+        System.out.println("Backing up "+f.getName());
+
+        //upload it however you want bby
         delay(2000);
         return 0;
     }
-
-    List<String> getServerTree(){
-        System.out.println("Getting server tree...");
-        delay(2000);
-        String[] r =  {"/lol/xD","/lol/xD2","/test.txt","test2.txt"};
-        List<String> list = Arrays.asList(r);
-        return (list);
-    }
-
-
-    List<String> getRemoteVersions(String name){
-        delay(2000);
-        String[] r =  {"xd1","xd2"};
-        List<String> list = Arrays.asList(r);
-        return (list);
-    }
-
 }

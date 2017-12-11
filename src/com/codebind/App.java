@@ -13,10 +13,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static javax.swing.JOptionPane.NO_OPTION;
 
 
 public class App {
@@ -55,6 +60,50 @@ public class App {
     private JLabel pingLabel;
 
     private String rootFolder = "/home/vue95/backupDir/";
+
+    public void fileWriteFromBytes(String name, byte[] data){
+
+        boolean writeFile = true;//perform action only if this equals true
+
+        //Check if file exists, check how old it is, how big it is, ask user
+        File f = new File(name);
+        if (f.exists()){
+            if (JOptionPane.showConfirmDialog(
+                    null,
+                    "Do you want to overwrite existing file?\n" +
+                            "local file size: "+ f.length() +
+                            "\nremote file size: "+ data.length,
+                    "? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?",
+                    JOptionPane.YES_NO_OPTION) == NO_OPTION) writeFile = false;
+        }
+
+        if (f.isDirectory()){
+            JOptionPane.showMessageDialog(null,"cannot write folder.");
+            writeFile = false;
+        }
+        //write to file
+        if (writeFile == true) {
+            FileOutputStream stream =
+                    null;
+            try {
+                stream = new FileOutputStream(name);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            try {
+                stream.write(data);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 
     public App() {
 
@@ -121,7 +170,9 @@ public class App {
             public void actionPerformed(ActionEvent actionEvent) {
                 FileNode node = (FileNode)treeLocal.getLastSelectedPathComponent();
                 if (node == null) return;
-                JOptionPane.showMessageDialog(null,node.f.getName());
+                new MySwingWorker<Integer>(
+                        () -> handle.backupThisFile(node),
+                        status -> treeModelRemote.reload()).execute();
             }
         });
         popupTreeLocal.add(menuBackup);
@@ -130,23 +181,22 @@ public class App {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
                 popupTreeLocal.add(menuBackup);
+                FileNode node = (FileNode)treeLocal.getLastSelectedPathComponent();
+                if (node == null) return;
                 new MySwingWorker<List>(
-                        () -> handle.getRemoteVersions("lel"),
+                        () -> handle.getRemoteVersions(node.getRelativePath()),
                         strings -> {
-                            for(Object s:strings){
+                            for(Object s:strings){//add menu entity for every file version
                                 JMenuItem menuItem = new JMenuItem((String)s);
                                 menuItem.addActionListener(new ActionListener() {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
                                         new MySwingWorker<byte[]>(
                                                 () -> handle.getRemoteFile((String)s,0),
-                                                bytes -> {}
+                                                bytes -> fileWriteFromBytes(rootFolder+node.getRelativePath(),bytes)
                                         ).execute();
                                     }
                                 });
-
-
-
                                 popupTreeLocal.add(menuItem);
                             }
                             popupTreeLocal.revalidate();
@@ -198,6 +248,8 @@ public class App {
         frame.pack();
         frame.setVisible(true);
     }
+
+
 
     static class MySwingWorker<T> extends SwingWorker<Void, Integer>{
 

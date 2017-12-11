@@ -14,9 +14,9 @@ public class FileNode extends TextNode {
     File f;
 
     String getRelativePath(){
-        FileNode fileNode = (FileNode)getRoot();
+        FileNode rootNode = (FileNode)getRoot();
         //System.out.println("path of tree root: "+ fileNode.f.getPath());
-        return f.getPath().replace(fileNode.f.getPath(),"");
+        return f.getPath().replace(rootNode.f.getPath()+"/","");
     }
 
     FileNode(String name){
