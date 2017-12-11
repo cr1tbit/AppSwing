@@ -13,38 +13,6 @@ public class FileNode extends TextNode {
 
     File f;
 
-    FileNode getTwins( DefaultTreeModel targetModel){
-        int reachedDepth = 0;
-        System.out.println();
-        String relPath = getRelativePath();
-        String[] paths = relPath.split("/");
-        System.out.println("relPath: " + relPath);
-        FileNode tempNode = (FileNode)targetModel.getRoot();
-        System.out.println("depth:"+paths.length);
-        for(int iNodeDepth = 1; iNodeDepth<paths.length;iNodeDepth++){
-            System.out.println("layer: "+iNodeDepth + " ChildCount: "+tempNode.getChildCount());
-            for(int iChild = 0; iChild< tempNode.getChildCount(); iChild++){
-                if(((FileNode)tempNode.getChildAt(iChild)).f.getName().contains(paths[iNodeDepth])) {
-                    tempNode = (FileNode) tempNode.getChildAt(iChild);
-                    reachedDepth = iNodeDepth;
-                    break;
-                }
-            }
-        }
-        if (reachedDepth == paths.length-1) return tempNode;
-        else return null;
-    }
-
-    //FileNode getTwin( DefaultTreeModel targetModel){
-    //    DefaultMutableTreeNode targetRootNode = (DefaultMutableTreeNode) targetModel.getRoot();
-    //    getPathToRoot();
-    //}
-
-
-
-
-
-
     String getRelativePath(){
         FileNode fileNode = (FileNode)getRoot();
         //System.out.println("path of tree root: "+ fileNode.f.getPath());

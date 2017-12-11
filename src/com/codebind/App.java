@@ -21,27 +21,99 @@ import java.util.function.Supplier;
 
 public class App {
     private JPanel panelMain;
-    private JButton butConnect;
-    private JPanel panelCtrl;
-    private JPanel panelTree;
-    private JLabel labelStatus;
-    private JPanel panelTreeLocal;
-    private JPanel panelTreeRemote;
-    private JPanel panelCtrlIFace;
-    private JPanel panelCtrlIpField;
-    private JTextField ipTextField;
+        private JPanel panelTree;
+            private JPanel panelTreeLocal;
+            private JPanel panelTreeRemote;
+        private JPanel panelCtrl;
+
+
+    //tree objects:
     private JTree treeLocal;
-    private JLabel labelRootCat;
     private JTree treeRemote;
+
+
+    //buttons:
+    private JButton butConnect;
+    private JButton butCheckStatus;
+    private JButton butGetTree;
+    private JButton butDoNothing;
+
+    //Static labels:
+    private JLabel labelStatus;
+    private JLabel labelIP;
+    private JLabel labelUsername;
+    private JLabel labelPassword;
+    private JLabel labelRootCat;
+
+    //dynamic labels:
+    private JLabel labelRootCatVal;
+    private JLabel labelStatusVal;
+    private JTextField textFieldIPVal;
+    private JTextField textFieldUsernameVal;
+    private JPasswordField passwordFieldPWVal;
+
     private JLabel pingLabel;
 
+    private String rootFolder = "/home/vue95/backupDir/";
 
     public App() {
 
         ServerHandle handle = new ServerHandle();
 
-        JPopupMenu myPopupMenu = new JPopupMenu();
-        myPopupMenu.setPreferredSize(new Dimension(150, 80));
+        labelRootCatVal.setText(rootFolder);
+
+        handle.setupStatusLabel(labelStatusVal);
+        handle.setStatusText("App init");
+
+        FileNode rootNodeLocal = new FileNode("",rootFolder);
+        TextNode rootNodeRemote = new TextNode("/");
+
+        DefaultTreeModel treeModelLocal = new DefaultTreeModel(rootNodeLocal);
+        DefaultTreeModel treeModelRemote = new DefaultTreeModel(rootNodeRemote);
+
+        //Button listeners:
+        butCheckStatus.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                handle.IPAddr = textFieldIPVal.getText();
+                new MySwingWorker<Integer>(
+                        () -> handle.ping(),
+                        ping -> pingLabel.setText("ping: " + ping))
+                        .execute();
+            }
+        });
+
+        butConnect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                handle.IPAddr = textFieldIPVal.getText();
+                String user = labelUsername.getText();
+                String pass = labelPassword.getText();
+                new MySwingWorker<Integer>(
+                        () -> handle.login(user,pass),
+                        stat -> {})
+                        .execute();
+            }
+        });
+
+        butGetTree.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                new MySwingWorker<List>(
+                        () -> handle.getServerTree(),
+                        strings -> {
+                            for(Object s:strings){
+                                TextNode.populate(treeModelRemote,(String)s);
+                            }
+                            treeModelRemote.reload();
+                        } ).execute();
+            }
+        });
+
+
+        //setup popup menu bound to right clicking on a file:
+        JPopupMenu popupTreeLocal = new JPopupMenu();
+        popupTreeLocal.setPreferredSize(new Dimension(150, 80));
 
         JMenuItem menuBackup = new JMenuItem("Backup this item");
         menuBackup.addActionListener(new ActionListener() {
@@ -52,42 +124,55 @@ public class App {
                 JOptionPane.showMessageDialog(null,node.f.getName());
             }
         });
-        myPopupMenu.add(menuBackup);
-        myPopupMenu.addSeparator();
+        popupTreeLocal.add(menuBackup);
 
-
-        treeLocal.setInheritsPopupMenu(true);
-        treeLocal.setComponentPopupMenu(myPopupMenu);
-
-        myPopupMenu.addPopupMenuListener(new PopupMenuListener() {
+        popupTreeLocal.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
+                popupTreeLocal.add(menuBackup);
+                new MySwingWorker<List>(
+                        () -> handle.getRemoteVersions("lel"),
+                        strings -> {
+                            for(Object s:strings){
+                                JMenuItem menuItem = new JMenuItem((String)s);
+                                menuItem.addActionListener(new ActionListener() {
+                                    @Override
+                                    public void actionPerformed(ActionEvent actionEvent) {
+                                        new MySwingWorker<byte[]>(
+                                                () -> handle.getRemoteFile((String)s,0),
+                                                bytes -> {}
+                                        ).execute();
+                                    }
+                                });
 
-                myPopupMenu.add(menuBackup);
-
-                new Task_getRemoteVersions(handle,myPopupMenu,"lel").execute();
 
 
+                                popupTreeLocal.add(menuItem);
+                            }
+                            popupTreeLocal.revalidate();
+                            popupTreeLocal.repaint();
+                        } ).execute();
             }
 
             @Override
             public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {
-                myPopupMenu.removeAll();
+                popupTreeLocal.removeAll();
             }
 
             @Override
-            public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {
-
-            }
+            public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {}
         });
+
+        treeLocal.setInheritsPopupMenu(true);
+        treeLocal.setComponentPopupMenu(popupTreeLocal);
+
+        treeLocal.setModel(treeModelLocal);
+        treeRemote.setModel(treeModelRemote);
+
+        //treeLocal.addMouseListener(new MouseAdapter() {
+        //});
+
         /*
-        butConnect.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                JOptionPane.showMessageDialog(null,"kek");
-            }
-        });
-
         treeLocal.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
@@ -98,34 +183,7 @@ public class App {
         });*/
 
 
-        FileNode rootNodeLocal = new FileNode("");
-        TextNode rootNodeRemote = new TextNode("/");
 
-
-        DefaultTreeModel treeModelLocal = new DefaultTreeModel(rootNodeLocal);
-        DefaultTreeModel treeModelRemote = new DefaultTreeModel(rootNodeRemote);
-
-        new MySwingWorker(
-                () -> handle.getServerTree(),
-                strings -> {
-                    for(Object s:strings){
-                        TextNode.populate(treeModelRemote,(String)s);
-                    }
-                    treeModelRemote.reload();
-                } ).execute();
-
-        new MySwingWorker(
-                () -> handle.ping(),
-                ping -> pingLabel.setText("ping: " + (ping.get(0)).toString()))
-                    .execute();
-
-
-        treeLocal.setModel(treeModelLocal);
-        treeRemote.setModel(treeModelRemote);
-
-
-        treeLocal.addMouseListener(new MouseAdapter() {
-        });
     }
 
 
@@ -133,42 +191,45 @@ public class App {
         JFrame frame = new JFrame("App");
         frame.setSize(500,500);
 
-
         App app = new App();
 
         frame.setContentPane(app.panelMain);
-
-
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
-
-
     }
 
-    static class MySwingWorker extends SwingWorker<Void, Integer>{
+    static class MySwingWorker<T> extends SwingWorker<Void, Integer>{
 
+        //can be bound to see progress. Not very useful atm.
         static JProgressBar myBar;
 
-        Supplier<List> getFunc;
-        Consumer<List> setIFace;
+        //lambda that takes a long time to complete
+        // - probably an server request
+        Supplier<T> getFunc;
 
-        List list;
+        //lambda executed at the end of the workers'
+        //life - probably an interface modification
+        //command/
+        Consumer<T> setIFace;
+
+        //basic data handle for this worker. Care has
+        //to be taken of, as data type is defined rather
+        //in lambda call than inside of this class.
+        T data;
 
         static void setMyBar(JProgressBar bar){
             myBar = bar;
         }
 
-        MySwingWorker(Supplier<List> getFunc, Consumer<List> setIFace ){
+        MySwingWorker(Supplier<T> getFunc, Consumer<T> setIFace ){
             this.getFunc = getFunc;
             this.setIFace = setIFace;
         }
 
-
-
         @Override
         protected Void doInBackground() throws Exception {
-            list = getFunc.get();
+            data = getFunc.get();
             publish(50);
             return null;
         }
@@ -184,90 +245,9 @@ public class App {
 
         @Override
         protected void done() {
-            setIFace.accept(list);
+            setIFace.accept(data);
 
         }
-
     }
-
-
-    static class Task_getRemoteVersions extends SwingWorker<Void, Integer> {
-
-        JPopupMenu jPopupMenu;
-        String fileName;
-        ServerHandle handle;
-        String versions[];
-
-        public Task_getRemoteVersions(ServerHandle handle, JPopupMenu jPopupMenu, String fileName) {
-            this.jPopupMenu = jPopupMenu;
-            this.fileName = fileName;
-            this.handle=handle;
-        }
-
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            versions = handle.getRemoteVersions(fileName);
-            return null;
-        }
-        @Override
-        protected void done() {
-            for(int iVersions = 0; iVersions < versions.length; iVersions++){
-                JMenuItem remoteFileMenuItem = new JMenuItem(versions[iVersions]);
-                jPopupMenu.add(remoteFileMenuItem);
-                //jPopupMenu.doLayout();
-            }
-            //jPopupMenu.setSize((int)jPopupMenu.getSize().getWidth(),(int)jPopupMenu.getSize().getHeight()*5);
-
-            jPopupMenu.revalidate();
-            jPopupMenu.repaint();
-
-        }
-
-    }
-
-    /*static class Task_getServerTree extends SwingWorker<Void,Integer> {
-
-        JPopupMenu jPopupMenu;
-        String fileName;
-        ServerHandle handle;
-        String fileList[];
-
-        public Task_getServerTree(ServerHandle handle,DefaultTreeModel treeModel) {
-            this.handle=handle;
-        }
-
-        @Override
-        protected void process(List<Integer> chunks) {
-            int i = chunks.get(chunks.size()-1);
-            //jpb.setValue(i); // The last value in this array is all we care about.
-            System.out.println("process: " + i);
-            //label.setText("Loading " + i + " of " + max);
-        }
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            fileList = handle.getServerTree();
-            return null;
-        }
-        @Override
-        protected void done() {
-            DefaultMutableTreeNode node = treeMode
-            for(int iFileList = 0; iFileList < fileList.length; iFileList++){
-                JMenuItem remoteFileMenuItem = new JMenuItem(versions[iVersions]);
-                jPopupMenu.add(remoteFileMenuItem);
-                //jPopupMenu.doLayout();
-            }
-            //jPopupMenu.setSize((int)jPopupMenu.getSize().getWidth(),(int)jPopupMenu.getSize().getHeight()*5);
-
-            jPopupMenu.revalidate();
-            jPopupMenu.repaint();
-
-        }
-
-    }*/
-
-
-
 }
 
