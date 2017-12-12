@@ -158,7 +158,7 @@ public class ServerHandle implements Runnable {
 
 
     //file a nie byte[], moze date a nie int
-    byte[] getRemoteFile(String name, int version){
+    File getRemoteFile(String name, int version){
         System.out.println("getRemoteFile call: file "+name);
 
         MsgGetFile msg = new MsgGetFile(name, user);
@@ -177,7 +177,8 @@ public class ServerHandle implements Runnable {
 
         if (success == 1){
             String a = "FILE CONTENT LOL";
-            return a.getBytes();
+            //File f = new File("");
+            return null;
         }
         else
             return null;

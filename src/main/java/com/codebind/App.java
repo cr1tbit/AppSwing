@@ -194,9 +194,9 @@ public class App {
                                 menuItem.addActionListener(new ActionListener() {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
-                                        new MySwingWorker<byte[]>(
+                                        new MySwingWorker<File>(
                                                 () -> handle.getRemoteFile((String)s,0),
-                                                bytes -> fileWriteFromBytes(rootFolder+node.getRelativePath(),bytes)
+                                                bytes -> {}//fileWriteFromBytes(rootFolder+node.getRelativePath(),bytes)
                                         ).execute();
                                     }
                                 });
