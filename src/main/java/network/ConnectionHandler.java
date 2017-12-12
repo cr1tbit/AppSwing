@@ -1,8 +1,6 @@
 package network;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import message.*;
 
 import java.io.File;
@@ -18,11 +16,12 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     private ChannelHandlerContext ctx;
     private int partSize = (int) (0.5 * 1024 * 1024);
     private enum State {
-        IDLE, DWN, UPL
+        IDLE, DWN, UPL, LIST
     }
     private State state;
     private String filepath;
-    private String rootFolder = "/home/vue95/backupDir/";
+    //private String rootFolder = "/home/vue95/backupDir/";
+    private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
 
     public ConnectionHandler(BlockingQueue<Message> inQueue) {
         this.inQueue = inQueue;
@@ -33,9 +32,17 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     public void channelRead0(ChannelHandlerContext ctx, Message msg) {
         System.out.println("Otrzymano:");
         System.out.println(msg.toString());
-        if (msg.getType() == Message.Type.CHUNK && state == State.DWN)
-            fileAppend(filepath, ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
-        else
+        if (msg.getType() == Message.Type.SETTINGS)
+            partSize = ((MsgSettings) msg).getPartSize();
+        else if (msg.getType() == Message.Type.EXIT)
+            ctx.close();
+        else if (msg.getType() == Message.Type.CHUNK) {
+            if (state == State.DWN)
+                fileAppend(filepath, ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
+            else if (state == State.LIST)
+                fileAppend("..\\filelist.list", ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
+        }
+        else {
             if (msg.getType() == Message.Type.OK)
                 state = State.IDLE;
             try {
@@ -43,6 +50,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
         //ChannelFuture f = ctx.writeAndFlush(new Message(Message.Type.REPLY));
         /*String path = FileSystems.getDefault().getPath("uses.conf").toString();
         String user = "domp";
@@ -94,15 +102,21 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
         ctx.writeAndFlush(msg);
     }
 
+    public void getList(MsgList msg) {
+        state = State.LIST;
+        ctx.writeAndFlush(msg);
+    }
+
     public void sendFile(MsgAddFile msg) {
-        filepath = rootFolder + msg.getPath();
+        Path path = Paths.get(rootFolder, msg.getPath());
+        filepath = path.toString();
         state = State.UPL;
         ctx.writeAndFlush(msg);
 
         try {
             System.out.println(filepath);
             RandomAccessFile file = new RandomAccessFile(filepath, "rw");
-            int parts = (int) (file.length() + partSize) / partSize;
+            int parts = (int) (file.length() + partSize - 1) / partSize;
             System.out.println(file.length() + " " + partSize + " " + parts);
             for (int currPart = 0; currPart < parts; currPart++) {
                 byte[] data = getPart(file, currPart);
@@ -127,6 +141,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
 
     public byte[] getPart(RandomAccessFile file, int part) {
         try {
+            System.out.println(part + " " + partSize + " " + file.length());
             if (part * partSize >= file.length()) {
                 throw new IllegalArgumentException("Argument part jest zbyt duzy.");
             }
@@ -141,5 +156,10 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
         }
     }
 
+    public void disconnect() {
+        System.out.println("Zamykam połączenie...");
+        ChannelFuture f = ctx.writeAndFlush(new MsgExit());
+        f.addListener(ChannelFutureListener.CLOSE);
+    }
 
 }

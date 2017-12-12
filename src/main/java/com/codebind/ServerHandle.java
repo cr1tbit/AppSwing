@@ -27,6 +27,7 @@ import java.util.concurrent.BlockingQueue;
 public class ServerHandle implements Runnable {
     private BlockingQueue<Message> inQueue;
     private ConnectionHandler connectionHandler;
+    private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
 
     private int port;
 
@@ -64,7 +65,7 @@ public class ServerHandle implements Runnable {
                     .option(ChannelOption.SO_BACKLOG, 128);
 
             // Connect
-            ChannelFuture f = b.connect("192.168.43.35", port).sync();
+            ChannelFuture f = b.connect("127.0.0.1", port).sync();
 
             // Wait until the server socket is closed.
             // In this example, this does not happen, but you can do that to gracefully
@@ -108,7 +109,16 @@ public class ServerHandle implements Runnable {
 
     Integer ping(){
         System.out.println("Pinging IP: " + IPAddr);
-        delay(2000);
+
+        MsgPing ping = new MsgPing();
+        connectionHandler.send(ping);
+        try {
+            Message reply = inQueue.take();
+            if (reply instanceof MsgReply)
+                ;//Success
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return 69;
     }
 
@@ -140,9 +150,26 @@ public class ServerHandle implements Runnable {
         }
         return isConnected;
     }
+
+    //Moze dac zeby te co maja kilka wersji sie jakos inaczej wyswietlaly
+    //Pobieram plik z lista plikow i zapisuje do ..\filelist.list
+    //Kazda linijka to "nazwapliku:arch", gdzie arch - bool czy archiwizowac stare wersje
     List<String> getServerTree(){
         System.out.println("Getting server tree...");
-        delay(2000);
+
+        MsgList msg = new MsgList(user);
+        connectionHandler.getList(msg);
+        int success = 0;
+        try {
+            Message reply = inQueue.take();
+            if (reply instanceof MsgOk)
+                success = 1;
+            else if (reply instanceof MsgError)
+                ;//String error = ((MsgError) reply).getError();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         String[] r =  {"/lol/xD","/lol/xD2","/test.txt","test2.txt"};
         List<String> list = Arrays.asList(r);
         return (list);
@@ -174,11 +201,10 @@ public class ServerHandle implements Runnable {
             e.printStackTrace();
         }
 
-
         if (success == 1){
-            String a = "FILE CONTENT LOL";
-            //File f = new File("");
-            return null;
+            //String a = "FILE CONTENT LOL";
+            File f = new File(msg.getPath());
+            return f;
         }
         else
             return null;
@@ -186,17 +212,31 @@ public class ServerHandle implements Runnable {
     }
 
     int deleteRemoteFile(String name, int version){
-        delay(2000);
+        MsgDelete msg = new MsgDelete(name, user);
+        connectionHandler.send(msg);
+        try {
+            Message reply = inQueue.take();
+            if (reply instanceof MsgOk)
+                return 1;//Success
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return 0;
     }
 
     int backupThisFile(FileNode file){
+        boolean history = false; // czy zapisywać zeszle wersje pliku
         File f = file.f;
-        System.out.println("Backing up "+f.getName());
+        String relPath = file.getRelativePath();
+        relPath = relPath.replace(rootFolder + "\\", "");
+
+        System.out.println("Backing up "+relPath);
+        System.out.println("Backing up "+file.getRelativePath());
 
         //upload it however you want bby
         delay(2000);
-        MsgAddFile msg = new MsgAddFile(file.getRelativePath(), user, f.length());
+        MsgAddFile msg = new MsgAddFile(relPath, user, f.length(), history);
         connectionHandler.sendFile(msg);
         int success = 0;
         try {
@@ -211,5 +251,10 @@ public class ServerHandle implements Runnable {
 
 
         return success;
+    }
+
+    //Zamkniecie polaczenia, przy wyjsciu z programu czy kliknieciu czy cos
+    void disconnect(){
+        connectionHandler.disconnect();
     }
 }

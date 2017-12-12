@@ -59,7 +59,8 @@ public class App {
 
     private JLabel pingLabel;
 
-    private String rootFolder = "/home/vue95/backupDir/";
+    //private String rootFolder = "/home/vue95/backupDir/";
+    private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
 
     public void fileWriteFromBytes(String name, byte[] data){
 
