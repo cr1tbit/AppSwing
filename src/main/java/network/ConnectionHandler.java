@@ -16,12 +16,13 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
 
     private BlockingQueue<Message> inQueue;
     private ChannelHandlerContext ctx;
-    private int partSize = (int) 0.5 * 1024 * 1024;
+    private int partSize = (int) (0.5 * 1024 * 1024);
     private enum State {
         IDLE, DWN, UPL
     }
     private State state;
     private String filepath;
+    private String rootFolder = "/home/vue95/backupDir/";
 
     public ConnectionHandler(BlockingQueue<Message> inQueue) {
         this.inQueue = inQueue;
@@ -57,7 +58,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
         this.ctx = ctx;
-        ctx.writeAndFlush(new MsgLogin("dominik","passwd"));
+        /*ctx.writeAndFlush(new MsgLogin("dominik","passwd"));
 
         int test = 2;
         if(test == 1) {
@@ -74,7 +75,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
                 e.printStackTrace();
             }
         } else
-            ctx.writeAndFlush(new MsgGetFile("p.gif", "dominik"));
+            ctx.writeAndFlush(new MsgGetFile("p.gif", "dominik"));*/
     }
 
     @Override
@@ -94,14 +95,15 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     public void sendFile(MsgAddFile msg) {
-        filepath = msg.getPath();
+        filepath = rootFolder + msg.getPath();
         state = State.UPL;
         ctx.writeAndFlush(msg);
 
         try {
+            System.out.println(filepath);
             RandomAccessFile file = new RandomAccessFile(filepath, "rw");
             int parts = (int) (file.length() + partSize) / partSize;
-            //System.out.println(file.length() + " " + partSize + " " + parts);
+            System.out.println(file.length() + " " + partSize + " " + parts);
             for (int currPart = 0; currPart < parts; currPart++) {
                 byte[] data = getPart(file, currPart);
                 ctx.writeAndFlush(new MsgFileChunk(data, currPart));
