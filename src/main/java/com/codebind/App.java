@@ -59,8 +59,8 @@ public class App {
 
     private JLabel pingLabel;
 
-    //private String rootFolder = "/home/vue95/backupDir/";
-    private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
+    private String rootFolder = "/home/vue95/backupDir/";
+    //private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
 
     public void fileWriteFromBytes(String name, byte[] data){
 
@@ -107,7 +107,7 @@ public class App {
 
 
     public App() {
-
+        //Setup server handle
         ServerHandle handle = new ServerHandle(8080);
         Thread serverHandleThread = new Thread(handle);
         serverHandleThread.start();
@@ -118,13 +118,23 @@ public class App {
         handle.setupStatusLabel(labelStatusVal);
         handle.setStatusText("App init");
 
+        /*********************
+         * GUI SETUP
+         *********************/
+
         FileNode rootNodeLocal = new FileNode("",rootFolder);
         TextNode rootNodeRemote = new TextNode("/");
 
         DefaultTreeModel treeModelLocal = new DefaultTreeModel(rootNodeLocal);
         DefaultTreeModel treeModelRemote = new DefaultTreeModel(rootNodeRemote);
 
+        treeLocal.setModel(treeModelLocal);
+        treeRemote.setModel(treeModelRemote);
+
+        ///////////////////
         //Button listeners:
+        ///////////////////
+
         butCheckStatus.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -163,12 +173,16 @@ public class App {
             }
         });
 
+        //////////////////
+        //Local tree popup:
+        //////////////////
 
         //setup popup menu bound to right clicking on a file:
         JPopupMenu popupTreeLocal = new JPopupMenu();
-        popupTreeLocal.setPreferredSize(new Dimension(150, 80));
+        popupTreeLocal.setPreferredSize(new Dimension(250, 80));
 
-        JMenuItem menuBackup = new JMenuItem("Backup this item");
+        //add menu entry to backup file
+        JMenuItem menuBackup = new JMenuItem("Just back my file up");
         menuBackup.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -179,24 +193,29 @@ public class App {
                         status -> treeModelRemote.reload()).execute();
             }
         });
-        popupTreeLocal.add(menuBackup);
 
+        //add menu entries to download each versions retrieved from server
         popupTreeLocal.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
+                popupTreeLocal.removeAll();
                 popupTreeLocal.add(menuBackup);
+                popupTreeLocal.add(new JSeparator());
                 FileNode node = (FileNode)treeLocal.getLastSelectedPathComponent();
                 if (node == null) return;
+                System.out.println("relative path: "+ node.getRelativePath());
                 new MySwingWorker<List>(
                         () -> handle.getRemoteVersions(node.getRelativePath()),
                         strings -> {
-                            for(Object s:strings){//add menu entity for every file version
-                                JMenuItem menuItem = new JMenuItem((String)s);
+                            for(int iStrings = 0; iStrings<strings.size();iStrings++)   {
+                                final int versionIndex = iStrings;
+                                JMenuItem menuItem =
+                                        new JMenuItem("Download: "+node.name+ " - " + (String)strings.get(iStrings));
                                 menuItem.addActionListener(new ActionListener() {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
                                         new MySwingWorker<File>(
-                                                () -> handle.getRemoteFile((String)s,0),
+                                                () -> handle.getRemoteFile((String)strings.get(versionIndex),versionIndex),
                                                 bytes -> {}//fileWriteFromBytes(rootFolder+node.getRelativePath(),bytes)
                                         ).execute();
                                     }
@@ -210,6 +229,7 @@ public class App {
 
             @Override
             public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {
+
                 popupTreeLocal.removeAll();
             }
 
@@ -220,8 +240,91 @@ public class App {
         treeLocal.setInheritsPopupMenu(true);
         treeLocal.setComponentPopupMenu(popupTreeLocal);
 
-        treeLocal.setModel(treeModelLocal);
-        treeRemote.setModel(treeModelRemote);
+        ////////////////////
+        //Remote tree popup:
+        ////////////////////
+
+        //popup bound to right click on remote tree
+        JPopupMenu popupTreeRemote = new JPopupMenu();
+        popupTreeRemote.setPreferredSize(new Dimension(250, 80));
+
+        //Dummy menu entry, DELET THIS
+        JMenuItem menuDummy = new JMenuItem("Rick and morty fan");
+
+        //dynamically add menu entries to download/delete versions
+        popupTreeRemote.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
+                popupTreeRemote.removeAll();
+                popupTreeRemote.add(menuDummy);
+                TextNode node = (TextNode)treeRemote.getLastSelectedPathComponent();
+                if (node == null) return;
+                System.out.println("relative path: "+ node.getRelativePath());
+                new MySwingWorker<List>(
+                        () -> handle.getRemoteVersions(node.getRelativePath()),
+                        strings -> {
+                            for(int iStrings = 0; iStrings<strings.size();iStrings++)   {
+                                final int versionIndex = iStrings;
+
+                                //Menu item with download option:
+                                JMenuItem menuItem =
+                                        new JMenuItem("Download: "+node.name+ " - " + (String)strings.get(iStrings));
+                                menuItem.addActionListener(new ActionListener() {
+                                    @Override
+                                    public void actionPerformed(ActionEvent actionEvent) {
+                                        new MySwingWorker<File>(
+                                                () -> handle.getRemoteFile((String)strings.get(versionIndex),versionIndex),
+                                                bytes -> {}//fileWriteFromBytes(rootFolder+node.getRelativePath(),bytes)
+                                        ).execute();
+                                    }
+                                });
+                                popupTreeRemote.add(menuItem);
+                                JMenuItem menuItem2 =
+                                        new JMenuItem("Delete: "+node.name+ " - " + (String)strings.get(iStrings));
+                                menuItem.addActionListener(new ActionListener() {
+                                    @Override
+                                    public void actionPerformed(ActionEvent actionEvent) {
+                                        new MySwingWorker<>(
+                                                () -> handle.deleteRemoteFile((String)strings.get(versionIndex),versionIndex),
+                                                bytes -> {
+                                                    new MySwingWorker<List>(
+                                                            () -> handle.getServerTree(),
+                                                            strings -> {
+                                                                for(Object s:strings){
+                                                                    TextNode.populate(treeModelRemote,(String)s);
+                                                                }
+                                                                treeModelRemote.reload();
+                                                            } ).execute();
+                                                }
+                                        ).execute();
+
+                                    }
+                                });
+                                popupTreeRemote.add(menuItem2);
+
+                            }
+                            popupTreeRemote.revalidate();
+                            popupTreeRemote.repaint();
+                        } ).execute();
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent popupMenuEvent) {
+
+                popupTreeRemote.removeAll();
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent popupMenuEvent) {}
+        });
+
+        treeRemote.setInheritsPopupMenu(true);
+        treeRemote.setComponentPopupMenu(popupTreeRemote);
+
+
+
+
+
 
         //treeLocal.addMouseListener(new MouseAdapter() {
         //});

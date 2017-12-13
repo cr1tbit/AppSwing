@@ -27,7 +27,9 @@ import java.util.concurrent.BlockingQueue;
 public class ServerHandle implements Runnable {
     private BlockingQueue<Message> inQueue;
     private ConnectionHandler connectionHandler;
-    private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
+    //private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
+    private String rootFolder = "/home/vue95/backupDir/";
+
 
     private int port;
 
@@ -156,7 +158,7 @@ public class ServerHandle implements Runnable {
     //Kazda linijka to "nazwapliku:arch", gdzie arch - bool czy archiwizowac stare wersje
     List<String> getServerTree(){
         System.out.println("Getting server tree...");
-
+        /*
         MsgList msg = new MsgList(user);
         connectionHandler.getList(msg);
         int success = 0;
@@ -169,7 +171,7 @@ public class ServerHandle implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        */
         String[] r =  {"/lol/xD","/lol/xD2","/test.txt","test2.txt"};
         List<String> list = Arrays.asList(r);
         return (list);
@@ -186,7 +188,7 @@ public class ServerHandle implements Runnable {
 
     //file a nie byte[], moze date a nie int
     File getRemoteFile(String name, int version){
-        System.out.println("getRemoteFile call: file "+name);
+        System.out.println("getRemoteFile call: file "+name +" of version " + version);
 
         MsgGetFile msg = new MsgGetFile(name, user);
         connectionHandler.getFile(msg);
