@@ -12,11 +12,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -62,6 +60,8 @@ public class App {
     private JLabel pingLabel;
 
     private String rootFolder = "/home/vue95/backupDir/";
+    private String IPAddr = "127.0.0.1";
+    private int port = 8080;
     //private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
 
     public void fileWriteFromBytes(String name, byte[] data){
@@ -107,10 +107,25 @@ public class App {
         }
     }
 
+    public void saveSettings(){
+        File settingsFile = new File("settings.conf");
+
+    }
 
     public App() {
+
+        //load settings from a file
+        File settingsFile = new File("settings.conf");
+        if (settingsFile.exists()){
+            //DO MAGIC
+
+        }
+        //Or else default values are loaded, and the file is created.
+
+
+
         //Setup server handle
-        ServerHandle handle = new ServerHandle(8080);
+        ServerHandle handle = new ServerHandle(port);
         Thread serverHandleThread = new Thread(handle);
         serverHandleThread.start();
 
