@@ -3,7 +3,6 @@ package network;
 import io.netty.channel.*;
 import message.*;
 
-import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,10 +20,11 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     private State state;
     private String filepath;
     //private String rootFolder = "/home/vue95/backupDir/";
-    private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
+    private String rootFolder;
 
-    public ConnectionHandler(BlockingQueue<Message> inQueue) {
+    public ConnectionHandler(BlockingQueue<Message> inQueue, String rootFolder) {
         this.inQueue = inQueue;
+        this.rootFolder = rootFolder;
         this.state = State.IDLE;
     }
 
@@ -40,7 +40,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
             if (state == State.DWN)
                 fileAppend(filepath, ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
             else if (state == State.LIST)
-                fileAppend("..\\filelist.list", ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
+                fileAppend("filelist.list", ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
         }
         else {
             if (msg.getType() == Message.Type.OK)

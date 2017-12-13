@@ -1,17 +1,12 @@
 package com.codebind;
 
-import javax.imageio.plugins.jpeg.JPEGHuffmanTable;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,8 +14,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -119,10 +112,10 @@ public class App {
             Path path = Paths.get("settings.conf");
             Path tempPath = Paths.get("settings.conf.temp");
             BufferedWriter bw = Files.newBufferedWriter(tempPath);
-            bw.write("IPAddr:" + IPAddr + System.lineSeparator());
-            bw.write("port:" + port + System.lineSeparator());
-            bw.write("rootFolder:" + rootFolder + System.lineSeparator());
-            bw.write("user:" + user + System.lineSeparator());
+            bw.write("IPAddr;" + IPAddr + System.lineSeparator());
+            bw.write("port;" + port + System.lineSeparator());
+            bw.write("rootFolder;" + rootFolder + System.lineSeparator());
+            bw.write("user;" + user + System.lineSeparator());
             bw.close();
             Files.move(tempPath, path, REPLACE_EXISTING);
         } catch (Exception e) {
@@ -135,7 +128,7 @@ public class App {
         try (BufferedReader br = Files.newBufferedReader(Paths.get("settings.conf"))) {
             String line;
             while ((line = br.readLine()) != null) {
-                String parts[] = line.split(":");
+                String parts[] = line.split(";");
                 settings.put(parts[0], parts[1]);
             }
 
@@ -164,7 +157,7 @@ public class App {
 
 
         //Setup server handle
-        ServerHandle handle = new ServerHandle(port);
+        ServerHandle handle = new ServerHandle(rootFolder, IPAddr, port);
         Thread serverHandleThread = new Thread(handle);
         serverHandleThread.start();
 

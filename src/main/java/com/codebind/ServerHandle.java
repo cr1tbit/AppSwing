@@ -9,31 +9,37 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import message.*;
 import network.ConnectionHandler;
-import network.ConnectionInitializer;
-import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 import javax.swing.*;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 public class ServerHandle implements Runnable {
     private BlockingQueue<Message> inQueue;
     private ConnectionHandler connectionHandler;
     //private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
-    private String rootFolder = "/home/vue95/backupDir/";
+    private String rootFolder;
+    String IPAddr;
 
 
     private int port;
 
-    ServerHandle(int port){
+    ServerHandle(String rootFolder, String ipAddr, int port){
+        this.rootFolder = rootFolder;
+        this.IPAddr = ipAddr;
         this.port = port;
         this.inQueue = new ArrayBlockingQueue<Message>(256);
     }
@@ -51,7 +57,7 @@ public class ServerHandle implements Runnable {
         //EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
-            connectionHandler = new ConnectionHandler(inQueue);
+            connectionHandler = new ConnectionHandler(inQueue, rootFolder);
             Bootstrap b = new Bootstrap();
             //b.group(bossGroup, workerGroup)
             b.group(workerGroup)
@@ -67,7 +73,7 @@ public class ServerHandle implements Runnable {
                     .option(ChannelOption.SO_BACKLOG, 128);
 
             // Connect
-            ChannelFuture f = b.connect("127.0.0.1", port).sync();
+            ChannelFuture f = b.connect(IPAddr, port).sync();
 
             // Wait until the server socket is closed.
             // In this example, this does not happen, but you can do that to gracefully
@@ -81,7 +87,6 @@ public class ServerHandle implements Runnable {
     int superDelay2000 = 1;
     int status = 0;
 
-    String IPAddr;
     String user;
     String pass;
 
@@ -158,7 +163,7 @@ public class ServerHandle implements Runnable {
     //Kazda linijka to "nazwapliku:arch", gdzie arch - bool czy archiwizowac stare wersje
     List<String> getServerTree(){
         System.out.println("Getting server tree...");
-        /*
+
         MsgList msg = new MsgList(user);
         connectionHandler.getList(msg);
         int success = 0;
@@ -167,13 +172,28 @@ public class ServerHandle implements Runnable {
             if (reply instanceof MsgOk)
                 success = 1;
             else if (reply instanceof MsgError)
-                ;//String error = ((MsgError) reply).getError();
+                System.out.println(((MsgError) reply).getString());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        */
-        String[] r =  {"/lol/xD","/lol/xD2","/test.txt","test2.txt"};
-        List<String> list = Arrays.asList(r);
+
+        System.out.println("Splitting list...");
+        String[] result;
+        String input = "";
+        try (BufferedReader br = Files.newBufferedReader(Paths.get("filelist.list"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String parts[] = line.split(";");
+                input = input + ";/" + parts[0];
+            }
+            br.close();
+            Files.move(Paths.get("filelist.list"), Paths.get("filelist"), REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        result = input.split(";");
+
+        List<String> list = Arrays.asList(result);
         return (list);
     }
 
