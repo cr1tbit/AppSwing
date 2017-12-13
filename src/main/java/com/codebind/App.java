@@ -125,7 +125,6 @@ public class App {
             bw.write("user:" + user + System.lineSeparator());
             bw.close();
             Files.move(tempPath, path, REPLACE_EXISTING);
-            Files.delete(tempPath);
         } catch (Exception e) {
             e.printStackTrace();
         }
