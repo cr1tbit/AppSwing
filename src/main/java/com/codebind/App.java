@@ -42,6 +42,8 @@ public class App {
     private JButton butCheckStatus;
     private JButton butGetTree;
     private JButton butDoNothing;
+    private JButton butDisconnect;
+
 
     //Static labels:
     private JLabel labelStatus;
@@ -170,6 +172,16 @@ public class App {
                             }
                             treeModelRemote.reload();
                         } ).execute();
+            }
+        });
+
+        butDisconnect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                new MySwingWorker<>(
+                        () -> handle.disconnect(),
+                        strings -> {}
+                         ).execute();
             }
         });
 
@@ -320,26 +332,6 @@ public class App {
 
         treeRemote.setInheritsPopupMenu(true);
         treeRemote.setComponentPopupMenu(popupTreeRemote);
-
-
-
-
-
-
-        //treeLocal.addMouseListener(new MouseAdapter() {
-        //});
-
-        /*
-        treeLocal.addTreeSelectionListener(new TreeSelectionListener() {
-            @Override
-            public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
-                FileNode node = (FileNode)treeLocal.getLastSelectedPathComponent();
-                if (node == null) return;
-                JOptionPane.showMessageDialog(null,node.f.getName());
-            }
-        });*/
-
-
 
     }
 

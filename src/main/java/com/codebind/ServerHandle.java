@@ -256,7 +256,8 @@ public class ServerHandle implements Runnable {
     }
 
     //Zamkniecie polaczenia, przy wyjsciu z programu czy kliknieciu czy cos
-    void disconnect(){
+    int disconnect(){
         connectionHandler.disconnect();
+        return 0;
     }
 }
