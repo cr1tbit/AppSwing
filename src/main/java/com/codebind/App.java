@@ -156,10 +156,11 @@ public class App {
         //load settings from a file
         File settingsFile = new File("settings.conf");
         if (settingsFile.exists()){
-            //DO MAGIC
-
-        }
+            loadSettings();
+        } else {
         //Or else default values are loaded, and the file is created.
+            saveSettings();
+        }
 
 
 
