@@ -13,12 +13,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static javax.swing.JOptionPane.NO_OPTION;
 
 
@@ -63,6 +69,7 @@ public class App {
     private String IPAddr = "127.0.0.1";
     private int port = 8080;
     //private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
+    private String user = "dominik";
 
     public void fileWriteFromBytes(String name, byte[] data){
 
@@ -108,8 +115,40 @@ public class App {
     }
 
     public void saveSettings(){
-        File settingsFile = new File("settings.conf");
+        try {
+            Path path = Paths.get("settings.conf");
+            Path tempPath = Paths.get("settings.conf.temp");
+            BufferedWriter bw = Files.newBufferedWriter(tempPath);
+            bw.write("IPAddr:" + IPAddr + System.lineSeparator());
+            bw.write("port:" + port + System.lineSeparator());
+            bw.write("rootFolder:" + rootFolder + System.lineSeparator());
+            bw.write("user:" + user + System.lineSeparator());
+            bw.close();
+            Files.move(tempPath, path, REPLACE_EXISTING);
+            Files.delete(tempPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
+    public void loadSettings() {
+        Map<String, String> settings = new HashMap<String, String>();
+        try (BufferedReader br = Files.newBufferedReader(Paths.get("settings.conf"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String parts[] = line.split(":");
+                settings.put(parts[0], parts[1]);
+            }
+
+            port = Integer.parseInt(settings.get("port"));
+            rootFolder = settings.get("rootFolder");
+            IPAddr = settings.get("IPAddr");
+            user = settings.get("user");
+
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public App() {
