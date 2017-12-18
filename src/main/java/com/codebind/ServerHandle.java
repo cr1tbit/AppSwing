@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -34,6 +35,7 @@ public class ServerHandle implements Runnable {
     //private String rootFolder = "C:\\Users\\Dominik\\Desktop\\Poli\\sem7\\OPA\\AppSwing\\AppSwing\\files";
     private String rootFolder;
     String IPAddr;
+    boolean logged;
 
 
     private int port;
@@ -43,6 +45,7 @@ public class ServerHandle implements Runnable {
         this.IPAddr = ipAddr;
         this.port = port;
         this.inQueue = new ArrayBlockingQueue<Message>(256);
+        this.logged = false;
     }
 
     public void run() {
@@ -152,6 +155,7 @@ public class ServerHandle implements Runnable {
 
         if (isConnected == 1){
             setStatusText("Connected.");
+            logged = true;
         }
         else{
             setStatusText("Connection error.");
@@ -163,6 +167,10 @@ public class ServerHandle implements Runnable {
     //Pobieram plik z lista plikow i zapisuje do ..\filelist.list
     //Kazda linijka to "nazwapliku:arch", gdzie arch - bool czy archiwizowac stare wersje
     List<String> getServerTree(){
+        if (!logged){
+            System.out.println("Not logged in!");
+            return new ArrayList<String>();
+        }
         System.out.println("Getting server tree...");
 
         MsgList msg = new MsgList(user);
@@ -199,15 +207,23 @@ public class ServerHandle implements Runnable {
     }
 
     List<String> getRemoteVersions(String name){
-        System.out.println("getting backupped versions of: "+name);
-        MsgGetFileVer msg = new MsgGetFileVer(name, user);
+        if (!logged){
+            System.out.println("Not logged in!");
+            return new ArrayList<String>();
+        }
+
+        String relPath = name.replace(rootFolder, "");
+        System.out.println("getting backupped versions of: "+relPath);
+        MsgGetFileVer msg = new MsgGetFileVer(relPath, user);
         connectionHandler.getFileVer(msg);
         try {
             Message reply = inQueue.take();
             if (!(reply instanceof MsgFileVer))
                 throw new Exception("Didnt get FileVer");
             MsgFileVer fileVer = (MsgFileVer) reply;
-            List<String> list = Arrays.asList(fileVer.getDates());
+            String[] parts = fileVer.getDates().split(";");
+            List<String> list = new ArrayList<String>(Arrays.asList(parts));
+            System.out.println(list);
             return (list);
         } catch (Exception e) {
             e.printStackTrace();
@@ -222,6 +238,10 @@ public class ServerHandle implements Runnable {
 
     //file a nie byte[], moze date a nie int
     File getRemoteFile(String name, int version){
+        if (!logged){
+            System.out.println("Not logged in!");
+            return null;
+        }
         System.out.println("getRemoteFile call: file "+name +" of version " + version);
 
         MsgGetFile msg = new MsgGetFile(name, user);
@@ -248,6 +268,10 @@ public class ServerHandle implements Runnable {
     }
 
     int deleteRemoteFile(String name, int version){
+        if (!logged){
+            System.out.println("Not logged in!");
+            return 0;
+        }
         MsgDelete msg = new MsgDelete(name, user);
         connectionHandler.send(msg);
         try {
@@ -262,10 +286,14 @@ public class ServerHandle implements Runnable {
     }
 
     int backupThisFile(FileNode file){
+        if (!logged){
+            System.out.println("Not logged in!");
+            return 0;
+        }
         boolean history = false; // czy zapisywać zeszle wersje pliku
         File f = file.f;
         String relPath = file.getRelativePath();
-        relPath = relPath.replace(rootFolder + "\\", "");
+        relPath = relPath.replace(rootFolder, "");
 
         System.out.println("Backing up "+relPath);
         System.out.println("Backing up "+file.getRelativePath());
