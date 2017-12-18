@@ -41,8 +41,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
                 fileAppend(filepath, ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
             else if (state == State.LIST)
                 fileAppend("filelist.list", ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
-        }
-        else {
+        } else {
             if (msg.getType() == Message.Type.OK)
                 state = State.IDLE;
             try {
@@ -99,6 +98,11 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     public void getFile(MsgGetFile msg) {
         filepath = msg.getPath();
         state = State.DWN;
+        ctx.writeAndFlush(msg);
+    }
+
+    public void getFileVer(MsgGetFileVer msg) {
+        filepath = msg.getPath();
         ctx.writeAndFlush(msg);
     }
 

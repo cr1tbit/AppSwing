@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -199,10 +200,23 @@ public class ServerHandle implements Runnable {
 
     List<String> getRemoteVersions(String name){
         System.out.println("getting backupped versions of: "+name);
-        delay(2000);
-        String[] r =  {"xd1","xd2"};
+        MsgGetFileVer msg = new MsgGetFileVer(name, user);
+        connectionHandler.getFileVer(msg);
+        try {
+            Message reply = inQueue.take();
+            if (!(reply instanceof MsgFileVer))
+                throw new Exception("Didnt get FileVer");
+            MsgFileVer fileVer = (MsgFileVer) reply;
+            List<String> list = Arrays.asList(fileVer.getDates());
+            return (list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        /*String[] r =  {"xd1","xd2"};
         List<String> list = Arrays.asList(r);
-        return (list);
+        return (list);*/
     }
 
 
@@ -258,7 +272,7 @@ public class ServerHandle implements Runnable {
 
         //upload it however you want bby
         delay(2000);
-        MsgAddFile msg = new MsgAddFile(relPath, user, f.length(), history);
+        MsgAddFile msg = new MsgAddFile(relPath, user, f.length(), new Date());
         connectionHandler.sendFile(msg);
         int success = 0;
         try {
