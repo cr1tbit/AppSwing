@@ -238,7 +238,7 @@ public class App {
 
         //setup popup menu bound to right clicking on a file:
         JPopupMenu popupTreeLocal = new JPopupMenu();
-        popupTreeLocal.setPreferredSize(new Dimension(250, 80));
+        popupTreeLocal.setPreferredSize(new Dimension(420, 100));
 
         //add menu entry to backup file
         JMenuItem menuBackup = new JMenuItem("Just back my file up");
@@ -305,7 +305,7 @@ public class App {
 
         //popup bound to right click on remote tree
         JPopupMenu popupTreeRemote = new JPopupMenu();
-        popupTreeRemote.setPreferredSize(new Dimension(250, 80));
+        popupTreeRemote.setPreferredSize(new Dimension(420, 100));
 
         //Dummy menu entry, DELET THIS
         JMenuItem menuDummy = new JMenuItem("Rick and morty fan");
