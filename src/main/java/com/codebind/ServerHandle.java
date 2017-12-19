@@ -237,7 +237,7 @@ public class ServerHandle implements Runnable {
 
 
     //file a nie byte[], moze date a nie int
-    File getRemoteFile(String name, int version){
+    File getRemoteFile(String name, String date){
         if (!logged){
             System.out.println("Not logged in!");
             return null;
