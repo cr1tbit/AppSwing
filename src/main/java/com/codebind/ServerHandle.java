@@ -272,7 +272,8 @@ public class ServerHandle implements Runnable {
 
     }
 
-    int deleteRemoteFile(String name, int version){
+    int deleteRemoteFile(String name, String date){
+        int version = 0xDDDDDD;
         System.out.println("Delete!");
         if (!logged){
             System.out.println("Not logged in!");

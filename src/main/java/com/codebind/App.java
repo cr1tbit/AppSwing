@@ -305,17 +305,17 @@ public class App {
 
         //popup bound to right click on remote tree
         JPopupMenu popupTreeRemote = new JPopupMenu();
-        popupTreeRemote.setPreferredSize(new Dimension(420, 100));
+        popupTreeRemote.setPreferredSize(new Dimension(420, 150));
 
         //Dummy menu entry, DELET THIS
-        JMenuItem menuDummy = new JMenuItem("Rick and morty fan");
+        //JMenuItem menuDummy = new JMenuItem("Rick and morty fan");
 
         //dynamically add menu entries to download/delete versions
         popupTreeRemote.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
                 popupTreeRemote.removeAll();
-                popupTreeRemote.add(menuDummy);
+                //popupTreeRemote.add(menuDummy);
                 TextNode node = (TextNode)treeRemote.getLastSelectedPathComponent();
                 if (node == null) return;
                 System.out.println("relative path: "+ node.getRelativePath());
@@ -344,7 +344,7 @@ public class App {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
                                         new MySwingWorker<>(
-                                                () -> handle.deleteRemoteFile((String)strings.get(versionIndex),versionIndex),
+                                                () -> handle.deleteRemoteFile(node.name, (String)strings.get(versionIndex)),
                                                 bytes -> {
                                                     new MySwingWorker<List>(
                                                             () -> handle.getServerTree(),
