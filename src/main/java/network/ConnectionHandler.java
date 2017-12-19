@@ -3,7 +3,9 @@ package network;
 import io.netty.channel.*;
 import message.*;
 
+import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -39,8 +41,10 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
         else if (msg.getType() == Message.Type.CHUNK) {
             if (state == State.DWN)
                 fileAppend(filepath, ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
-            else if (state == State.LIST)
+            else if (state == State.LIST) {
+                System.out.println("Appenduje list");
                 fileAppend("filelist.list", ((MsgFileChunk) msg).getData(), ((MsgFileChunk) msg).getPart() * partSize);
+            }
         } else {
             if (msg.getType() == Message.Type.OK)
                 state = State.IDLE;
@@ -133,6 +137,15 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
 
     public void fileAppend(String pathstr, byte[] buff, int pos) {
         try {
+            if (pos == 0) {
+                Path path = Paths.get(pathstr);
+                try {
+                    Files.delete(path);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
             Path path = Paths.get(pathstr);
             RandomAccessFile file = new RandomAccessFile(path.toAbsolutePath().toString(), "rw");
             file.seek(pos);

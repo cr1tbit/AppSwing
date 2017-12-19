@@ -340,7 +340,7 @@ public class App {
                                 popupTreeRemote.add(menuItem);
                                 JMenuItem menuItem2 =
                                         new JMenuItem("Delete: "+node.name+ " - " + (String)strings.get(iStrings));
-                                menuItem.addActionListener(new ActionListener() {
+                                menuItem2.addActionListener(new ActionListener() {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
                                         new MySwingWorker<>(
