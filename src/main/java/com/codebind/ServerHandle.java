@@ -218,6 +218,7 @@ public class ServerHandle implements Runnable {
         connectionHandler.getFileVer(msg);
         try {
             Message reply = inQueue.take();
+            System.out.println(reply.toString());
             if (!(reply instanceof MsgFileVer))
                 throw new Exception("Didnt get FileVer");
             MsgFileVer fileVer = (MsgFileVer) reply;
@@ -273,13 +274,17 @@ public class ServerHandle implements Runnable {
     }
 
     int deleteRemoteFile(String name, String date){
-        int version = /*SPIERDALAJ*/0xDDDDDD;
         System.out.println("Delete!");
         if (!logged){
             System.out.println("Not logged in!");
             return 0;
         }
-        MsgDelete msg = new MsgDelete(name, user);
+        System.out.println("Delete: file "+name +" of version " + date);
+        String dateTemp = date.replace(":","-");
+        dateTemp = dateTemp.replace(" ", "_");
+        dateTemp = dateTemp.replace("/", ".");
+
+        MsgDelete msg = new MsgDelete(name, dateTemp, user);
         connectionHandler.send(msg);
         try {
             Message reply = inQueue.take();
