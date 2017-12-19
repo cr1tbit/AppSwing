@@ -140,7 +140,8 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
             if (pos == 0) {
                 Path path = Paths.get(pathstr);
                 try {
-                    Files.delete(path);
+                    if (path.toFile().exists())
+                        Files.delete(path);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
