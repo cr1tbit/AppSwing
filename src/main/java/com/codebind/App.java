@@ -247,7 +247,7 @@ public class App {
             public void actionPerformed(ActionEvent actionEvent) {
                 FileNode node = (FileNode)treeLocal.getLastSelectedPathComponent();
                 if (node == null) return;
-                new MySwingWorker<Integer>(
+                new MySwingWorker<>(
                         () -> handle.backupThisFile(node),
                         status -> treeModelRemote.reload()).execute();
             }
@@ -274,7 +274,7 @@ public class App {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
                                         new MySwingWorker<File>(
-                                                () -> handle.getRemoteFile(node.name, (String)strings.get(versionIndex)),
+                                                () -> handle.getRemoteFile(node.getRelativePath(), (String)strings.get(versionIndex)),
                                                 bytes -> {}//fileWriteFromBytes(rootFolder+node.getRelativePath(),bytes)
                                         ).execute();
                                     }
@@ -307,15 +307,12 @@ public class App {
         JPopupMenu popupTreeRemote = new JPopupMenu();
         popupTreeRemote.setPreferredSize(new Dimension(420, 150));
 
-        //Dummy menu entry, DELET THIS
-        //JMenuItem menuDummy = new JMenuItem("Rick and morty fan");
 
         //dynamically add menu entries to download/delete versions
         popupTreeRemote.addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent popupMenuEvent) {
                 popupTreeRemote.removeAll();
-                //popupTreeRemote.add(menuDummy);
                 TextNode node = (TextNode)treeRemote.getLastSelectedPathComponent();
                 if (node == null) return;
                 System.out.println("relative path: "+ node.getRelativePath());
@@ -332,7 +329,7 @@ public class App {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
                                         new MySwingWorker<File>(
-                                                () -> handle.getRemoteFile(node.name, (String)strings.get(versionIndex)),
+                                                () -> handle.getRemoteFile(node.getRelativePath(), (String)strings.get(versionIndex)),
                                                 bytes -> {}//fileWriteFromBytes(rootFolder+node.getRelativePath(),bytes)
                                         ).execute();
                                     }
@@ -344,7 +341,7 @@ public class App {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
                                         new MySwingWorker<>(
-                                                () -> handle.deleteRemoteFile(node.name, (String)strings.get(versionIndex)),
+                                                () -> handle.deleteRemoteFile(node.getRelativePath(), (String)strings.get(versionIndex)),
                                                 bytes -> {
                                                     new MySwingWorker<List>(
                                                             () -> handle.getServerTree(),
