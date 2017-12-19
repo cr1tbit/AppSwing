@@ -101,6 +101,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
 
     public void getFile(MsgGetFile msg) {
         filepath = msg.getPath();
+        filepath = Paths.get(rootFolder, filepath).toString();
         state = State.DWN;
         ctx.writeAndFlush(msg);
     }
@@ -136,6 +137,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     public void fileAppend(String pathstr, byte[] buff, int pos) {
+        System.out.println("Appenduje plik: " + pathstr + " pos: " + pos);
         try {
             if (pos == 0) {
                 Path path = Paths.get(pathstr);
