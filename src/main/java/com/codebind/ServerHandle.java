@@ -249,7 +249,7 @@ public class ServerHandle implements Runnable {
 
 
 
-        MsgGetFile msg = new MsgGetFile(name + dateTemp, user);
+        MsgGetFile msg = new MsgGetFile(name, dateTemp, user);
         connectionHandler.getFile(msg);
         int success = 0;
         try {
