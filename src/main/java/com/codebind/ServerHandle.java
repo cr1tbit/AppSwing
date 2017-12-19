@@ -242,9 +242,14 @@ public class ServerHandle implements Runnable {
             System.out.println("Not logged in!");
             return null;
         }
-        System.out.println("getRemoteFile call: file "+name +" of version " + version);
+        System.out.println("getRemoteFile call: file "+name +" of version " + date);
+        String dateTemp = date.replace(":","-");
+        dateTemp = dateTemp.replace(" ", "_");
+        dateTemp = dateTemp.replace("/", ".");
 
-        MsgGetFile msg = new MsgGetFile(name, user);
+
+
+        MsgGetFile msg = new MsgGetFile(name + dateTemp, user);
         connectionHandler.getFile(msg);
         int success = 0;
         try {

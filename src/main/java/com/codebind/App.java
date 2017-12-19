@@ -332,7 +332,7 @@ public class App {
                                     @Override
                                     public void actionPerformed(ActionEvent actionEvent) {
                                         new MySwingWorker<File>(
-                                                () -> handle.getRemoteFile((String)strings.get(versionIndex),versionIndex),
+                                                () -> handle.getRemoteFile(node.name, (String)strings.get(versionIndex)),
                                                 bytes -> {}//fileWriteFromBytes(rootFolder+node.getRelativePath(),bytes)
                                         ).execute();
                                     }
