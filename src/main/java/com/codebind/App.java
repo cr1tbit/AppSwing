@@ -3,6 +3,7 @@ package com.codebind;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -214,8 +215,10 @@ public class App {
                 new MySwingWorker<List>(
                         () -> handle.getServerTree(),
                         strings -> {
+                            ((TextNode)treeModelRemote.getRoot()).removeAllChildren();
                             for(Object s:strings){
                                 TextNode.populate(treeModelRemote,(String)s);
+
                             }
                             treeModelRemote.reload();
                         } ).execute();
@@ -346,6 +349,8 @@ public class App {
                                                     new MySwingWorker<List>(
                                                             () -> handle.getServerTree(),
                                                             strings -> {
+                                                                ((TextNode)treeModelRemote.getRoot()).removeAllChildren();
+
                                                                 for(Object s:strings){
                                                                     TextNode.populate(treeModelRemote,(String)s);
                                                                 }
