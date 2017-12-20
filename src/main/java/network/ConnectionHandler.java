@@ -3,6 +3,7 @@ package network;
 import io.netty.channel.*;
 import message.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
@@ -112,11 +113,14 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     public void fileAppend(String pathstr, byte[] buff, int pos) {
         System.out.println("Appenduje plik: " + pathstr + " pos: " + pos);
         try {
-            if (pos == 0) {
+            if (state != State.LIST && pos == 0) {
                 Path path = Paths.get(pathstr);
                 try {
                     if (path.toFile().exists())
                         Files.delete(path);
+                    File parent = path.toFile().getParentFile();
+                    if (!parent.exists() && !parent.mkdirs())
+                        throw new IllegalStateException("Couldn't create dir: " + parent);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
