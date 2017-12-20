@@ -1,6 +1,5 @@
 package com.codebind;
 
-import com.sun.org.apache.regexp.internal.RE;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
