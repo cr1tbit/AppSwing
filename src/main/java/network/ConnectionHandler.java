@@ -21,7 +21,6 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
     }
     private State state;
     private String filepath;
-    //private String rootFolder = "/home/vue95/backupDir/";
     private String rootFolder;
 
     public ConnectionHandler(BlockingQueue<Message> inQueue, String rootFolder) {
@@ -54,39 +53,12 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
                 e.printStackTrace();
             }
         }
-        //ChannelFuture f = ctx.writeAndFlush(new Message(Message.Type.REPLY));
-        /*String path = FileSystems.getDefault().getPath("uses.conf").toString();
-        String user = "domp";
-        MsgAddFile addFile = new MsgAddFile(path, user);
-        System.out.println(addFile.toString());
-        ChannelFuture f = ctx.writeAndFlush(addFile);
-        //ChannelFuture f = ctx.writeAndFlush(new MsgPing());
-        //ChannelFuture f = ctx.writeAndFlush(new UnixTime());
-        f.addListener(ChannelFutureListener.CLOSE);*/
 
     }
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
         this.ctx = ctx;
-        /*ctx.writeAndFlush(new MsgLogin("dominik","passwd"));
-
-        int test = 2;
-        if(test == 1) {
-            try {
-                RandomAccessFile file = new RandomAccessFile("p.gif", "rw");
-                ctx.writeAndFlush(new MsgAddFile("p.gif", "dominik", file.length()));
-                int parts = (int) (file.length() + partSize) / partSize;
-                System.out.println(file.length() + " " + partSize + " " + parts);
-                for (int currPart = 0; currPart < parts; currPart++) {
-                    byte[] data = getPart(file, currPart);
-                    ctx.writeAndFlush(new MsgFileChunk(data, currPart));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else
-            ctx.writeAndFlush(new MsgGetFile("p.gif", "dominik"));*/
     }
 
     @Override
@@ -131,6 +103,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<Message> {
                 byte[] data = getPart(file, currPart);
                 ctx.writeAndFlush(new MsgFileChunk(data, currPart));
             }
+            file.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

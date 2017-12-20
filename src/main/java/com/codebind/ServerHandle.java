@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -189,6 +190,8 @@ public class ServerHandle implements Runnable {
         System.out.println("Splitting list...");
         String[] result;
         String input = "";
+        if (!Paths.get("filelist.list").toFile().exists())
+            return new ArrayList<String>();
         try (BufferedReader br = Files.newBufferedReader(Paths.get("filelist.list"))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -203,6 +206,7 @@ public class ServerHandle implements Runnable {
         result = input.split(";");
 
         List<String> list = Arrays.asList(result);
+        System.out.println(list);
         return (list);
     }
 
@@ -310,9 +314,15 @@ public class ServerHandle implements Runnable {
         System.out.println("Backing up "+relPath);
         System.out.println("Backing up "+file.getRelativePath());
 
-        //upload it however you want bby
-        delay(2000);
-        MsgAddFile msg = new MsgAddFile(relPath, user, f.length(), new Date());
+        Date date = new Date(f.lastModified());
+        List<String> list = getRemoteVersions(relPath);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        if (list.contains(sdf.format(date))) {
+            System.out.println("Plik znajduje sie na serwerze.");
+            return 0;
+        }
+
+        MsgAddFile msg = new MsgAddFile(relPath, user, f.length(), date);
         connectionHandler.sendFile(msg);
         int success = 0;
         try {
